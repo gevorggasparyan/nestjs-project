@@ -1,17 +1,25 @@
 // car.controller.ts
 
-import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
+import {Controller, Get, Post, Body, Param, Put, Delete, UseGuards, Req, UnauthorizedException} from '@nestjs/common';
 import { CarService } from './cars.service';
 import { CreateCarDto } from './dto/create-car.dto';
 import { UpdateCarDto } from './dto/update-car.dto';
 import { Car } from './interfaces/car.interface';
+import { JwtAuthGuard } from "../auth/jwt-auth-guard";
 
 @Controller('cars')
 export class CarController {
     constructor(private readonly carService: CarService) {}
 
-    @Post()
-    async create(@Body() createCarDto: CreateCarDto): Promise<Car> {
+    @UseGuards(JwtAuthGuard) // Apply the JWT authentication guard
+    @Post('add')
+    async addCar(@Req() req, @Body() createCarDto: CreateCarDto) {
+        // Get the authenticated user from the request
+        const authenticatedUser = req.user;
+
+        if (!authenticatedUser) {
+            throw new UnauthorizedException();
+        }
         return this.carService.create(createCarDto);
     }
 
